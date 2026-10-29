@@ -1844,6 +1844,7 @@ function stopTicker(){if(timerInterval!==null){clearInterval(timerInterval);time
 function openMission(id){if(state.status!=='active'||!state.assignments[id])return;selectedId=id;covered=false;selectScreen('mission');}
 function refreshMission(){
   if(!state.settings.refresh||state.status!=='active'||!selectedId)return;
+  if(Date.now()>=state.endAt){finishRound();return;}
   const p=state.players.find(p=>p.id===selectedId),current=state.assignments[selectedId];
   if(!p||!current)return;
   const others=Object.fromEntries(Object.entries(state.assignments).filter(([id])=>id!==selectedId));
@@ -1890,6 +1891,7 @@ $('backButton').addEventListener('click',()=>{selectedId=null;covered=true;selec
 $('hideButton').addEventListener('click',()=>{covered=!covered;renderCover();});
 $('doneButton').addEventListener('click',()=>{
   if(state.status!=='active'||!selectedId)return;
+  if(Date.now()>=state.endAt){finishRound();return;}
   const a=state.assignments[selectedId];if(!a)return;a.done=!a.done;save();renderMission();hostBroadcast();
 });
 $('refreshButton').addEventListener('click',refreshMission);
@@ -2191,6 +2193,7 @@ function handleHostMessage(conn,msg){
   if(msg.t==='request') {if(conn._smcSeat)return;handleJoinRequest(conn,msg);return;}
   const id=conn._smcSeat;
   if(!id||!validSeat(id,conn._smcToken)||state.status!=='active')return;
+  if(Date.now()>=state.endAt){finishRound();return;}
   const a=state.assignments[id];if(!a)return;
   if(msg.t==='done'){
     a.done=msg.done===true;save();hostBroadcast();
